@@ -1,0 +1,19 @@
+version: "3"
+
+services:
+  docs_api:
+    build: ./docs_api
+    ports:
+      - "5000:5000"
+    environment:
+      ENVIRONMENT: local
+
+  db:
+    image: postgres:alpine
+    restart: always
+    environment:
+      POSTGRES_DB: db_test
+      POSTGRES_USER : test
+      POSTGRES_PASSWORD: test
+    ports:
+      - 5444:5432
