@@ -5,18 +5,16 @@ from fastapi import UploadFile
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from docs_app.crud.base import CRUDBase
 from docs_app.db.models.db_models import Document, DocumentType
-from docs_app.schemas.document import DocumentCreate, DocumentUpdate
 from sqlalchemy import select
 
 
-class CRUDDoc(CRUDBase[Document, DocumentCreate, DocumentUpdate]):
+class DocumentController():
     @staticmethod
     def get_file_extension(filename):
         return filename.rsplit('.', 1)[-1]
 
-    async def __get_doc_type(self, db: AsyncSession, typename: str, extension: str) -> DocumentType:
+    async def _get_doc_type(self, db: AsyncSession, typename: str, extension: str) -> DocumentType:
         result = await db.scalars(select(DocumentType).where(
                 DocumentType.typename==typename,
                 DocumentType.extension==extension,
@@ -30,21 +28,21 @@ class CRUDDoc(CRUDBase[Document, DocumentCreate, DocumentUpdate]):
 
     async def get(self, db: AsyncSession, id: int) -> Document:
         result = await db.scalars(
-            select(self.model)
-            .filter(self.model.id == id)
-            .options(selectinload(self.model.doc_type))
+            select(Document)
+            .filter(Document.id == id)
+            .options(selectinload(Document.doc_type))
         )
         return result.first()
 
     async def create_with_owner(
         self, db: AsyncSession, file_in: UploadFile, user_id: int
     ) -> Document:
-        doc_type_obj = await self.__get_doc_type(
+        doc_type_obj = await self._get_doc_type(
             db,
             file_in.content_type,
             self.get_file_extension(file_in.filename)
         )
-        db_obj = self.model(
+        db_obj = Document(
             docname=file_in.filename,
             user_id=user_id,
             doc_type=doc_type_obj,
@@ -61,9 +59,9 @@ class CRUDDoc(CRUDBase[Document, DocumentCreate, DocumentUpdate]):
         self, db: Session, user_id: int, skip: int = 0, limit: int = 100
     ) -> List[Document]:
         lst = await db.scalars(
-            select(self.model)
-            .where(self.model.user_id==user_id)
-            .options(selectinload(self.model.doc_type))
+            select(Document)
+            .where(Document.user_id==user_id)
+            .options(selectinload(Document.doc_type))
             .offset(skip)
             .limit(limit))
         return lst.all()
@@ -71,7 +69,7 @@ class CRUDDoc(CRUDBase[Document, DocumentCreate, DocumentUpdate]):
     async def update_document(
         self, db: AsyncSession, file_in: UploadFile, db_obj: Document,
     ) -> Document:
-        doc_type_obj = await self.__get_doc_type(
+        doc_type_obj = await self._get_doc_type(
             db,
             file_in.content_type,
             self.get_file_extension(file_in.filename)
@@ -86,6 +84,12 @@ class CRUDDoc(CRUDBase[Document, DocumentCreate, DocumentUpdate]):
         await db.commit()
         await db.refresh(db_obj, ['doc_type'])
         return db_obj
+    
+    async def remove(self, db: Session, id: int) -> Document:
+        obj = await self.get(db, id)
+        await db.delete(obj)
+        await db.commit()
+        return obj
 
 
-document = CRUDDoc(Document)
+document_controller = DocumentController()

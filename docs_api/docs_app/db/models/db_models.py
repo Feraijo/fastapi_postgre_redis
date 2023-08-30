@@ -1,5 +1,4 @@
 import datetime
-from typing import List
 from sqlalchemy import String, ForeignKey, UniqueConstraint
 
 from docs_app.db.models.base import Base
@@ -13,7 +12,6 @@ class User(Base):
     username: Mapped[str] = mapped_column(String(30))
     full_name: Mapped[str] = mapped_column(String(50))
     hashed_password: Mapped[str] = mapped_column(String)
-    documents: Mapped[List["Document"]] = relationship(cascade="all, delete-orphan")
 
 
 class DocumentType(Base):

@@ -1,5 +1,4 @@
-from sqlalchemy.ext.declarative import as_declarative, declared_attr
-from typing import Any
+from sqlalchemy.ext.declarative import as_declarative
 
 from docs_app.core.config import settings
 from sqlalchemy.ext.asyncio import AsyncAttrs

@@ -2,6 +2,9 @@
 
 [ -v ENVIRONMENT ] && export ENVIRONMENT=$ENVIRONMENT || export ENVIRONMENT=$OPENSHIFT_BUILD_REFERENCE
 
+# create tables in DB
+python initial_data.py
+
 if [[ ${ENVIRONMENT} = 'LOCAL' ]]; then
     exec uvicorn asgi:app --log-level=info --host 0.0.0.0 --port 5000 --workers 2 --no-access-log
 else

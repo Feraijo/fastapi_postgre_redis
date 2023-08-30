@@ -6,6 +6,7 @@ WORKDIR /usr/src/app
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
+ENV ENV_VAR DEV
 
 # Create directories for logs
 RUN touch /var/log/filebeat.log /var/log/filebeat.log.1 && \
@@ -27,6 +28,7 @@ RUN chmod +x ./entrypoint.sh
 
 # Publish network port
 EXPOSE 5000
+
 
 # Execute script to start the application web server
 ENTRYPOINT ["./entrypoint.sh"]
