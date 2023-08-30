@@ -4,9 +4,6 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-uvicorn = "*"
-pydantic-settings-yaml = "*"
-pydantic = "*"
 
 [dev-packages]
 

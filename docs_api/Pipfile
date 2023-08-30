@@ -14,6 +14,9 @@ python-dotenv = "*"
 pydantic-settings = "*"
 asyncpg = "*"
 pyyaml = "*"
+python-multipart = "*"
+python-jose = {version = "*", extras = ["cryptography"]}
+passlib = {version = "*", extras = ["bcrypt"]}
 
 [dev-packages]
 
