@@ -19,15 +19,21 @@ class Settings(BaseSettings):
     PRJ_HOST: str
     PRJ_PORT: int
 
-    DB_SCHEMA: str
-
     LOG_LEVEL: str
 
+    DB_SCHEMA: str
     POSTGRES_SERVER: str
     POSTGRES_PORT: int
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
+
+    REDIS_HOST: str
+    REDIS_PORT: int
+    SESSION_EXPIRE: int
+    SSID: str
+
+    BLOCKED_EXTS: str
 
     @property
     def CONN_STRING(self) -> str:
@@ -39,6 +45,9 @@ class Settings(BaseSettings):
             port=self.POSTGRES_PORT,
             database=self.POSTGRES_DB,
         )
-
+    
+    @property
+    def BAD_EXTS(self) -> list:
+        return [x for x in self.BLOCKED_EXTS.split(',')]
 
 settings = Settings(**sett_dict)

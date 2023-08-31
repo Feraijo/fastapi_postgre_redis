@@ -1,11 +1,12 @@
 from typing import Any, List
-from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from enum import Enum
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, Query
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from docs_app.controllers.document import document_controller
-from docs_app.schemas import DocumentSchema, DocumentCreate, DocumentUpdate
+from docs_app.schemas import DocumentSchema, DocumentCreate, DocumentUpdate, DocumentType
 from docs_app.core.dependencies import get_db, get_current_user
 from docs_app.db.models.db_models import User
 
@@ -15,15 +16,17 @@ router = APIRouter()
 @router.get("/", response_model=List[DocumentSchema])
 async def get_documents(
     db: Session = Depends(get_db),
-    skip: int = 0,
-    limit: int = 100,
     current_user: User = Depends(get_current_user),
+    doc_type: str = None
 ) -> Any:
     """
-    Получить документы пользователя.
+    Получить документы пользователя. 
+    Фильтрация по типу - значение `doc_type` ищется и в расширении, и в названии типа.
     """
     items = await document_controller.get_multi_by_owner(
-        db=db, user_id=current_user.id, skip=skip, limit=limit
+        db,
+        current_user.id,
+        doc_type
     )
     return items
 

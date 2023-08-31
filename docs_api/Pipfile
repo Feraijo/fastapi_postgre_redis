@@ -17,6 +17,7 @@ pyyaml = "*"
 python-multipart = "*"
 python-jose = {version = "*", extras = ["cryptography"]}
 passlib = {version = "*", extras = ["bcrypt"]}
+aioredis = "*"
 
 [dev-packages]
 

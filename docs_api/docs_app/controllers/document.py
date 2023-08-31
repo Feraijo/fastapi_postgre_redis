@@ -1,18 +1,23 @@
 import datetime
 from typing import List
 
-from fastapi import UploadFile
-from sqlalchemy.orm import Session, selectinload
+from fastapi import UploadFile, HTTPException
+from sqlalchemy.orm import Session, selectinload, joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
+from docs_app.core.config import settings
 
 from docs_app.db.models.db_models import Document, DocumentType
-from sqlalchemy import select
+from sqlalchemy import select, or_, and_
 
 
 class DocumentController():
     @staticmethod
     def get_file_extension(filename):
         return filename.rsplit('.', 1)[-1]
+
+    async def get_doc_types(self, db: AsyncSession) -> List[DocumentType]:
+        result = await db.execute(select(DocumentType.extension))
+        return result.all()
 
     async def _get_doc_type(self, db: AsyncSession, typename: str, extension: str) -> DocumentType:
         result = await db.scalars(select(DocumentType).where(
@@ -34,13 +39,20 @@ class DocumentController():
         )
         return result.first()
 
+    @staticmethod
+    def check_ext(extension: str) -> None:
+        if extension in settings.BAD_EXTS:
+            raise HTTPException(status_code=415, detail="Incorrect file extension")
+
     async def create_with_owner(
         self, db: AsyncSession, file_in: UploadFile, user_id: int
     ) -> Document:
+        ext = self.get_file_extension(file_in.filename)
+        self.check_ext(ext)
         doc_type_obj = await self._get_doc_type(
             db,
             file_in.content_type,
-            self.get_file_extension(file_in.filename)
+            ext
         )
         db_obj = Document(
             docname=file_in.filename,
@@ -56,16 +68,23 @@ class DocumentController():
         return db_obj
 
     async def get_multi_by_owner(
-        self, db: Session, user_id: int, skip: int = 0, limit: int = 100
+            self, 
+            db: Session, 
+            user_id: int, 
+            doc_type: str = None
     ) -> List[Document]:
-        lst = await db.scalars(
-            select(Document)
-            .where(Document.user_id==user_id)
-            .options(selectinload(Document.doc_type))
-            .offset(skip)
-            .limit(limit))
+        query = select(Document) \
+            .options(joinedload(Document.doc_type))\
+            .filter(Document.user_id==user_id)
+        if doc_type:
+            query = query.join(Document.doc_type)\
+            .filter(or_(
+                DocumentType.extension.contains(doc_type),
+                DocumentType.typename.contains(doc_type)
+                ))
+        lst = await db.scalars(query)
         return lst.all()
-    
+
     async def update_document(
         self, db: AsyncSession, file_in: UploadFile, db_obj: Document,
     ) -> Document:
