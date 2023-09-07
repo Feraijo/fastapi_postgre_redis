@@ -1,14 +1,10 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
-
 from docs_app.controllers.user import user_controller
-from docs_app.schemas import UserSchema, UserCreate
-
 from docs_app.core.dependencies import get_db
-
+from docs_app.schemas import UserCreate, UserSchema
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-
 
 router = APIRouter()
 

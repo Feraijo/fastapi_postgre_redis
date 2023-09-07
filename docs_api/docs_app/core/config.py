@@ -1,11 +1,13 @@
 import os
-import yaml
 
+import yaml
 from pydantic_settings import BaseSettings
 
-ENVIRONMENT = os.getenv('ENV_VAR', 'local')
+ENVIRONMENT = os.getenv("ENV_VAR", "local")
 par_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-with open(os.path.join(os.path.dirname(par_dir), f'config/{ENVIRONMENT.lower()}.yml')) as f:
+with open(
+    os.path.join(os.path.dirname(par_dir), f"config/{ENVIRONMENT.lower()}.yml")
+) as f:
     sett_dict = yaml.load(f, Loader=yaml.FullLoader)
 
 
@@ -45,9 +47,10 @@ class Settings(BaseSettings):
             port=self.POSTGRES_PORT,
             database=self.POSTGRES_DB,
         )
-    
+
     @property
     def BAD_EXTS(self) -> list:
-        return [x for x in self.BLOCKED_EXTS.split(',')]
+        return [x for x in self.BLOCKED_EXTS.split(",")]
+
 
 settings = Settings(**sett_dict)

@@ -1,21 +1,17 @@
 from typing import Generator
-import aioredis
-from fastapi import Depends, HTTPException, status, Request
-#from fastapi.security import OAuth2PasswordBearer
+from uuid import uuid4
+
+from docs_app.controllers.user import user_controller
+from docs_app.core.config import settings
+from docs_app.db.async_session import async_session
+from docs_app.db.models.db_models import User
+from docs_app.redis.redis_session_storage import SessionStorage
+from docs_app.schemas import TokenPayload
+from fastapi import Depends, HTTPException, Request, status
 from jose import jwt
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from docs_app.controllers.user import user_controller
-from docs_app.schemas import TokenPayload
-from docs_app.db.models.db_models import User
-from docs_app.core.config import settings
-from docs_app.db.async_session import async_session
-from docs_app.redis.redis_session_storage import SessionStorage
-from uuid import uuid4
-import json
-
-#reusable_oauth2 = OAuth2PasswordBearer(tokenUrl="/login/access-token")
 
 def genSessionId() -> str:
     return uuid4().hex
@@ -27,19 +23,18 @@ async def get_db() -> Generator[AsyncSession, None, None]:
 
 
 async def get_redis():
-    redis = SessionStorage()
-    return redis
+    return SessionStorage()
+
 
 async def get_current_user(
     request: Request,
     db: AsyncSession = Depends(get_db),
-    redis = Depends(get_redis),
-    #token: str = Depends(reusable_oauth2)
+    redis=Depends(get_redis),
 ) -> User:
     try:
         sessionId = request.cookies.get(settings.SSID, "")
         token = await redis.read_session(sessionId)
-    except:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authorised, use /login/access-token",
@@ -58,4 +53,3 @@ async def get_current_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
-
